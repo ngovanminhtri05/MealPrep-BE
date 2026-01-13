@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using MealPrep.Business.Interfaces;
 using MealPrep.Domain.Entities;
+using MealPrep.API.DTOs;
 
 namespace MealPrep.API.Controllers;
 
@@ -39,17 +40,33 @@ public class MealsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<Meal>> Create(Meal meal)
+    public async Task<ActionResult<Meal>> Create(CreateMealRequest request)
     {
+        var meal = new Meal
+        {
+            Name = request.Name,
+            Date = request.Date,
+            MealType = request.MealType,
+            RecipeId = request.RecipeId,
+            UserPreferenceId = request.UserPreferenceId
+        };
+        
         var createdMeal = await _mealService.CreateMealAsync(meal);
         return CreatedAtAction(nameof(GetById), new { id = createdMeal.Id }, createdMeal);
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<Meal>> Update(int id, Meal meal)
+    public async Task<ActionResult<Meal>> Update(int id, CreateMealRequest request)
     {
-        if (id != meal.Id)
-            return BadRequest();
+        var meal = await _mealService.GetMealByIdAsync(id);
+        if (meal == null)
+            return NotFound();
+        
+        meal.Name = request.Name;
+        meal.Date = request.Date;
+        meal.MealType = request.MealType;
+        meal.RecipeId = request.RecipeId;
+        meal.UserPreferenceId = request.UserPreferenceId;
 
         var updatedMeal = await _mealService.UpdateMealAsync(meal);
         return Ok(updatedMeal);
